@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silk Route Strategist</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        /* === GLOBAL STYLES === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(45deg, #8B4513, #D2691E, #CD853F);
+            background-size: 400% 400%;
+            animation: backgroundShift 20s ease infinite;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        @keyframes backgroundShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* === GAME CONTAINER === */
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(245, 245, 220, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-top: 20px;
+            border: 3px solid #8B4513;
+        }
+
+        /* === HEADER === */
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #DAA520, #FFD700);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #B8860B;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            color: #8B4513;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .game-subtitle {
+            font-size: 1.2em;
+            color: #654321;
+            font-style: italic;
+        }
+
+        /* === TUTORIAL MODAL === */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #F5DEB3, #DEB887);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 3px solid #8B4513;
+            position: relative;
+        }
+
+        .modal h2 {
+            color: #8B4513;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2em;
+        }
+
+        .modal p, .modal li {
+            color: #654321;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .modal ul {
+            margin-left: 20px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #32CD32, #228B22);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* === GAME CONTROLS === */
+        .game-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #32CD32, #228B22);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #8B4513;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #FF6347, #DC143C);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #87CEEB, #4682B4);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* === STATS DISPLAY === */
+        .stats-panel {
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #8B4513;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: linear-gradient(135deg, #F0F8FF, #E6E6FA);
+            border-radius: 8px;
+            border: 1px solid #DDD;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #8B4513;
+        }
+
+        /* === GAME MAP === */
+        .game-map {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: linear-gradient(135deg, #F5DEB3, #DEB887);
+            border: 3px solid #8B4513;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        #map-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* === D3 STYLES === */
+        .city-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .city-node:hover {
+            transform: scale(1.1);
+        }
+
+        .city-node.visited {
+            opacity: 0.6;
+        }
+
+        .city-node.current {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { r: 12; }
+            50% { r: 16; }
+            100% { r: 12; }
+        }
+
+        .city-label {
+            font-size: 12px;
+            font-weight: bold;
+            fill: #8B4513;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .route-edge {
+            stroke: #8B4513;
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.6;
+        }
+
+        .route-edge:hover {
+            opacity: 1;
+            stroke-width: 3;
+        }
+
+        .active-route {
+            stroke: #32CD32;
+            stroke-width: 4;
+            opacity: 1;
+            animation: routeFlow 2s infinite;
+        }
+
+        @keyframes routeFlow {
+            0% { stroke-dasharray: 0, 10; }
+            100% { stroke-dasharray: 10, 0; }
+        }
+
+        /* === TOOLTIP === */
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        /* === EVENT CARD === */
+        .event-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #8B4513;
+            z-index: 500;
+            max-width: 400px;
+            text-align: center;
+            animation: cardFlip 0.5s ease;
+        }
+
+        @keyframes cardFlip {
+            0% { transform: translate(-50%, -50%) rotateY(-90deg); }
+            100% { transform: translate(-50%, -50%) rotateY(0deg); }
+        }
+
+        .event-title {
+            font-size: 1.5em;
+            color: #8B4513;
+            margin-bottom: 15px;
+        }
+
+        .event-description {
+            color: #654321;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        /* === RESULTS MODAL === */
+        .results-modal {
+            background: linear-gradient(135deg, #F5DEB3, #DEB887);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 700px;
+            border: 3px solid #8B4513;
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 3em;
+            color: #228B22;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .result-item {
+            background: rgba(255,255,255,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #8B4513;
+        }
+
+        /* === RESPONSIVE DESIGN === */
+        @media (max-width: 768px) {
+            .game-container {
+                margin: 10px;
+                padding: 15px;
+            }
+
+            .game-title {
+                font-size: 2em;
+            }
+
+            .game-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                justify-content: center;
+            }
+
+            .game-map {
+                height: 400px;
+            }
+
+            .modal-content {
+                margin: 20px;
+                padding: 20px;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
+            <h2>🐪 Welcome to Silk Route Strategist! 🐪</h2>
+            <p><strong>You are a merchant planning your caravan route along the ancient Silk Road!</strong></p>
+            
+            <h3>🎯 Your Mission:</h3>
+            <ul>
+                <li>Visit ALL cities exactly once and return to your starting city</li>
+                <li>Maximize profits while minimizing time and risk</li>
+                <li>Handle random events that affect your journey</li>
+                <li>Use power-ups strategically to optimize your route</li>
+            </ul>
+
+            <h3>🎮 How to Play:</h3>
+            <ul>
+                <li><strong>Click cities</strong> in order to plan your route</li>
+                <li><strong>Hover over paths</strong> to see time and risk costs</li>
+                <li><strong>Event cards</strong> appear halfway through your journey</li>
+                <li><strong>Power-ups</strong> can reveal shortcuts or boost your caravan</li>
+                <li><strong>Validate</strong> your complete route to see your final score</li>
+            </ul>
+
+            <h3>💰 Scoring:</h3>
+            <p>Score = 1000 - (Total Time + Risk×2) + City Profits + Bonuses</p>
+            
+            <button class="btn-primary" onclick="startGame()">Begin Your Journey!</button>
+        </div>
+    </div>
+
+    <!-- Main Game Container -->
+    <div class="game-container">
+        <!-- Game Header -->
+        <div class="game-header">
+            <h1 class="game-title">🐪 Silk Route Strategist 🐪</h1>
+            <p class="game-subtitle">Plan your caravan's journey along the ancient trade routes</p>
+        </div>
+
+        <!-- Game Controls -->
+        <div class="game-controls">
+            <div class="control-group">
+                <button class="btn btn-success" onclick="validateRoute()" id="validate-btn" disabled>
+                    ✅ Validate Route
+                </button>
+                <button class="btn btn-warning" onclick="resetGame()">
+                    🔄 Reset Game
+                </button>
+                <button class="btn btn-info" onclick="showTutorial()">
+                    📖 Help
+                </button>
+            </div>
+            <div class="control-group">
+                <button class="btn btn-warning" onclick="useRevealShortcut()" id="shortcut-btn">
+                    🔍 Reveal Shortcut (1 use)
+                </button>
+                <button class="btn btn-success" onclick="useCaravanBoost()" id="boost-btn">
+                    ⚡ Caravan Boost (1 use)
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="stats-panel">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Cities Visited</div>
+                    <div class="stat-value" id="cities-count">0/12</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Time</div>
+                    <div class="stat-value" id="total-time">0 days</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Risk</div>
+                    <div class="stat-value" id="total-risk">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Estimated Profit</div>
+                    <div class="stat-value" id="total-profit">0 gold</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Current Score</div>
+                    <div class="stat-value" id="current-score">1000</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Map -->
+        <div class="game-map">
+            <svg id="map-svg"></svg>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip hidden"></div>
+
+    <!-- Event Card Modal -->
+    <div id="event-modal" class="modal hidden">
+        <div class="event-card">
+            <h3 class="event-title" id="event-title">Random Event!</h3>
+            <p class="event-description" id="event-description"></p>
+            <button class="btn-primary" onclick="closeEventCard()">Continue Journey</button>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="results-modal" class="modal hidden">
+        <div class="results-modal">
+            <h2>🏆 Journey Complete! 🏆</h2>
+            <div class="score-display" id="final-score">0</div>
+            <div class="results-grid">
+                <div class="result-item">
+                    <h4>⏱️ Total Time</h4>
+                    <p id="result-time">0 days</p>
+                </div>
+                <div class="result-item">
+                    <h4>⚠️ Total Risk</h4>
+                    <p id="result-risk">0</p>
+                </div>
+                <div class="result-item">
+                    <h4>💰 Total Profit</h4>
+                    <p id="result-profit">0 gold</p>
+                </div>
+                <div class="result-item">
+                    <h4>🎯 Efficiency Bonus</h4>
+                    <p id="result-bonus">0</p>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // === GAME DATA ===
+        const gameData = {
+            cities: [
+                { id: 'constantinople', name: 'Constantinople', x: 150, y: 200, marketPrice: 100, hazardLevel: 2 },
+                { id: 'damascus', name: 'Damascus', x: 200, y: 250, marketPrice: 120, hazardLevel: 3 },
+                { id: 'baghdad', name: 'Baghdad', x: 280, y: 220, marketPrice: 150, hazardLevel: 4 },
+                { id: 'tehran', name: 'Tehran', x: 350, y: 180, marketPrice: 130, hazardLevel: 3 },
+                { id: 'samarkand', name: 'Samarkand', x: 450, y: 150, marketPrice: 180, hazardLevel: 5 },
+                { id: 'bukhara', name: 'Bukhara', x: 420, y: 180, marketPrice: 160, hazardLevel: 4 },
+                { id: 'kashgar', name: 'Kashgar', x: 550, y: 170, marketPrice: 200, hazardLevel: 6 },
+                { id: 'dunhuang', name: 'Dunhuang', x: 650, y: 200, marketPrice: 170, hazardLevel: 4 },
+                { id: 'turpan', name: 'Turpan', x: 600, y: 150, marketPrice: 140, hazardLevel: 5 },
+                { id: 'urumqi', name: 'Urumqi', x: 580, y: 120, marketPrice: 110, hazardLevel: 3 },
+                { id: 'lanzhou', name: 'Lanzhou', x: 720, y: 180, marketPrice: 190, hazardLevel: 3 },
+                { id: 'xian', name: "Xi'an", x: 780, y: 220, marketPrice: 220, hazardLevel: 2 }
+            ],
+            edges: [
+                { from: 'constantinople', to: 'damascus', timeCost: 8, riskCost: 2 },
+                { from: 'damascus', to: 'baghdad', timeCost: 12, riskCost: 3 },
+                { from: 'baghdad', to: 'tehran', timeCost: 15, riskCost: 4 },
+                { from: 'tehran', to: 'samarkand', timeCost: 20, riskCost: 5 },
+                { from: 'samarkand', to: 'bukhara', timeCost: 6, riskCost: 2 },
+                { from: 'bukhara', to: 'kashgar', timeCost: 18, riskCost: 6 },
+                { from: 'kashgar', to: 'turpan', timeCost: 10, riskCost: 4 },
+                { from: 'turpan', to: 'urumqi', timeCost: 8, riskCost: 3 },
+                { from: 'urumqi', to: 'dunhuang', timeCost: 12, riskCost: 4 },
+                { from: 'dunhuang', to: 'lanzhou', timeCost: 14, riskCost: 3 },
+                { from: 'lanzhou', to: 'xian', timeCost: 10, riskCost: 2 },
+                // Additional connecting routes
+                { from: 'constantinople', to: 'baghdad', timeCost: 18, riskCost: 4 },
+                { from: 'damascus', to: 'tehran', timeCost: 20, riskCost: 5 },
+                { from: 'tehran', to: 'bukhara', timeCost: 16, riskCost: 4 },
+                { from: 'samarkand', to: 'kashgar', timeCost: 22, riskCost: 7 },
+                { from: 'kashgar', to: 'dunhuang', timeCost: 16, riskCost: 5 },
+                { from: 'turpan', to: 'lanzhou', timeCost: 20, riskCost: 6 },
+                { from: 'urumqi', to: 'xian', timeCost: 25, riskCost: 7 },
+                // Hidden shortcuts (unlocked by power-up)
+                { from: 'constantinople', to: 'samarkand', timeCost: 25, riskCost: 8, hidden: true },
+                { from: 'baghdad', to: 'kashgar', timeCost: 30, riskCost: 9, hidden: true },
+                { from: 'tehran', to: 'dunhuang', timeCost: 28, riskCost: 8, hidden: true }
+            ],
+            events: [
+                {
+                    title: "Sandstorm Ahead!",
+                    description: "A fierce sandstorm blocks your path. Next route segment takes 50% longer.",
+                    effect: { type: "timeMultiplier", value: 1.5 }
+                },
+                {
+                    title: "Bandit Warning",
+                    description: "Locals warn of bandits ahead. Next route segment has double risk.",
+                    effect: { type: "riskMultiplier", value: 2.0 }
+                },
+                {
+                    title: "Friendly Caravan",
+                    description: "You meet a friendly caravan! They share the route, reducing time by 30%.",
+                    effect: { type: "timeMultiplier", value: 0.7 }
+                },
+                {
+                    title: "Local Guide",
+                    description: "A local guide offers help, reducing both time and risk by 25%.",
+                    effect: { type: "both", timeValue: 0.75, riskValue: 0.75 }
+                },
+                {
+                    title: "Oasis Discovery",
+                    description: "You discover a hidden oasis! Your caravan is refreshed, halving next segment risk.",
+                    effect: { type: "riskMultiplier", value: 0.5 }
+                },
+                {
+                    title: "Merchant Rumors",
+                    description: "Fellow merchants share valuable route information. Next segment time reduced by 40%.",
+                    effect: { type: "timeMultiplier", value: 0.6 }
+                }
+            ]
+        };
+
+        // === GAME STATE ===
+        let gameState = {
+            route: [],
+            visitedCities: new Set(),
+            currentCity: null,
+            totalTime: 0,
+            totalRisk: 0,
+            totalProfit: 0,
+            eventTriggered: false,
+            currentEvent: null,
+            powerUps: {
+                shortcutRevealed: false,
+                shortcutUsed: false,
+                boostAvailable: true,
+                boostUsed: false
+            }
+        };
+
+        // === D3 SETUP ===
+        let svg, width, height, simulation, tooltip;
+
+        function initializeGame() {
+            // Set up SVG
+            svg = d3.select("#map-svg");
+            const container = document.querySelector(".game-map");
+            width = container.clientWidth;
+            height = container.clientHeight;
+            
+            svg.attr("width", width).attr("height", height);
+
+            // Scale coordinates to fit SVG
+            const xScale = d3.scaleLinear()
+                .domain([0, 900])
+                .range([50, width - 50]);
+            
+            const yScale = d3.scaleLinear()
+                .domain([0, 300])
+                .range([50, height - 50]);
+
+            // Update city coordinates
+            gameData.cities.forEach(city => {
+                city.screenX = xScale(city.x);
+                city.screenY = yScale(city.y);
+            });
+
+            // Set up tooltip
+            tooltip = d3.select("#tooltip");
+
+            renderMap();
+            updateStats();
+        }
+
+        function renderMap() {
+            // Clear existing elements
+            svg.selectAll("*").remove();
+
+            // Add background pattern
+            const defs = svg.append("defs");
+            const pattern = defs.append("pattern")
+                .attr("id", "parchment")
+                .attr("patternUnits", "userSpaceOnUse")
+                .attr("width", 100)
+                .attr("height", 100);
+            
+            pattern.append("rect")
+                .attr("width", 100)
+                .attr("height", 100)
+                .attr("fill", "#F5DEB3");
+
+            // Draw edges
+            const visibleEdges = gameData.edges.filter(edge => 
+                !edge.hidden || gameState.powerUps.shortcutRevealed
+            );
+
+            svg.selectAll(".edge")
+                .data(visibleEdges)
+                .enter()
+                .append("line")
+                .attr("class", d => `edge ${d.hidden ? 'shortcut' : ''}`)
+                .attr("x1", d => getCityById(d.from).screenX)
+                .attr("y1", d => getCityById(d.from).screenY)
+                .attr("x2", d => getCityById(d.to).screenX)
+                .attr("y2", d => getCityById(d.to).screenY)
+                .attr("stroke", d => d.hidden ? "#FF6347" : "#8B4513")
+                .attr("stroke-width", d => d.hidden ? 3 : 2)
+                .attr("opacity", d => d.hidden ? 0.8 : 0.6)
+                .attr("stroke-dasharray", d => d.hidden ? "5,5" : "none")
+                .on("mouseover", showEdgeTooltip)
+                .on("mouseout", hideTooltip);
+
+            // Draw cities
+            const cityGroups = svg.selectAll(".city-group")
+                .data(gameData.cities)
+                .enter()
+                .append("g")
+                .attr("class", "city-group")
+                .attr("transform", d => `translate(${d.screenX}, ${d.screenY})`);
+
+            cityGroups.append("circle")
+                .attr("class", "city-node")
+                .attr("r", 12)
+                .attr("fill", d => getCityColor(d))
+                .attr("stroke", "#8B4513")
+                .attr("stroke-width", 2)
+                .on("click", handleCityClick)
+                .on("mouseover", showCityTooltip)
+                .on("mouseout", hideTooltip);
+
+            cityGroups.append("text")
+                .attr("class", "city-label")
+                .attr("dy", -18)
+                .text(d => d.name)
+                .attr("font-size", "11px")
+                .attr("font-weight", "bold")
+                .attr("fill", "#8B4513");
+
+            // Draw route lines
+            drawRouteLines();
+        }
+
+        function getCityColor(city) {
+            if (gameState.currentCity === city.id) {
+                return "#32CD32"; // Current city - green
+            } else if (gameState.visitedCities.has(city.id)) {
+                return "#FFD700"; // Visited - gold
+            } else {
+                return "#87CEEB"; // Unvisited - light blue
+            }
+        }
+
+        function getCityById(id) {
+            return gameData.cities.find(city => city.id === id);
+        }
+
+        function getEdgeData(from, to) {
+            return gameData.edges.find(edge => 
+                (edge.from === from && edge.to === to) || 
+                (edge.from === to && edge.to === from)
+            );
+        }
+
+        function handleCityClick(event, city) {
+            // Don't allow clicking already visited cities (except for completing the circuit)
+            if (gameState.visitedCities.has(city.id) && 
+                !(gameState.route.length === gameData.cities.length && city.id === gameState.route[0])) {
+                return;
+            }
+
+            // Add city to route
+            gameState.route.push(city.id);
+            gameState.visitedCities.add(city.id);
+            gameState.currentCity = city.id;
+
+            // Add city profit
+            gameState.totalProfit += city.marketPrice;
+
+            // Calculate costs for the route segment
+            if (gameState.route.length > 1) {
+                const fromCity = gameState.route[gameState.route.length - 2];
+                const toCity = city.id;
+                const edge = getEdgeData(fromCity, toCity);
+                
+                if (edge) {
+                    let timeCost = edge.timeCost;
+                    let riskCost = edge.riskCost;
+
+                    // Apply event effects
+                    if (gameState.currentEvent) {
+                        const effect = gameState.currentEvent.effect;
+                        if (effect.type === "timeMultiplier") {
+                            timeCost *= effect.value;
+                        } else if (effect.type === "riskMultiplier") {
+                            riskCost *= effect.value;
+                        } else if (effect.type === "both") {
+                            timeCost *= effect.timeValue;
+                            riskCost *= effect.riskValue;
+                        }
+                        
+                        // Clear event after applying it
+                        gameState.currentEvent = null;
+                    }
+
+                    // Apply caravan boost if active
+                    if (gameState.powerUps.boostUsed) {
+                        timeCost *= 0.5;
+                        gameState.powerUps.boostUsed = false;
+                        gameState.powerUps.boostAvailable = false;
+                    }
+
+                    gameState.totalTime += Math.round(timeCost);
+                    gameState.totalRisk += Math.round(riskCost);
+                }
+            }
+
+            // Trigger event at halfway point
+            if (gameState.route.length === Math.floor(gameData.cities.length / 2) && !gameState.eventTriggered) {
+                triggerEvent();
+            }
+
+            updateMap();
+            updateStats();
+            checkGameCompletion();
+        }
+
+        function triggerEvent() {
+            gameState.eventTriggered = true;
+            const randomEvent = gameData.events[Math.floor(Math.random() * gameData.events.length)];
+            gameState.currentEvent = randomEvent;
+            
+            document.getElementById('event-title').textContent = randomEvent.title;
+            document.getElementById('event-description').textContent = randomEvent.description;
+            document.getElementById('event-modal').classList.remove('hidden');
+        }
+
+        function closeEventCard() {
+            document.getElementById('event-modal').classList.add('hidden');
+        }
+
+        function updateMap() {
+            // Update city colors
+            svg.selectAll(".city-node")
+                .attr("fill", d => getCityColor(d));
+
+            // Redraw route lines
+            drawRouteLines();
+        }
+
+        function drawRouteLines() {
+            // Remove existing route lines
+            svg.selectAll(".route-line").remove();
+
+            // Draw new route lines
+            for (let i = 1; i < gameState.route.length; i++) {
+                const fromCity = getCityById(gameState.route[i - 1]);
+                const toCity = getCityById(gameState.route[i]);
+
+                svg.append("line")
+                    .attr("class", "route-line")
+                    .attr("x1", fromCity.screenX)
+                    .attr("y1", fromCity.screenY)
+                    .attr("x2", toCity.screenX)
+                    .attr("y2", toCity.screenY)
+                    .attr("stroke", "#32CD32")
+                    .attr("stroke-width", 4)
+                    .attr("opacity", 0.8)
+                    .attr("stroke-dasharray", "10,5");
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('cities-count').textContent = `${gameState.visitedCities.size}/${gameData.cities.length}`;
+            document.getElementById('total-time').textContent = `${gameState.totalTime} days`;
+            document.getElementById('total-risk').textContent = gameState.totalRisk;
+            document.getElementById('total-profit').textContent = `${gameState.totalProfit} gold`;
+            
+            const currentScore = 1000 - gameState.totalTime - (gameState.totalRisk * 2) + gameState.totalProfit;
+            document.getElementById('current-score').textContent = Math.max(0, currentScore);
+
+            // Update validate button
+            const validateBtn = document.getElementById('validate-btn');
+            if (gameState.route.length === gameData.cities.length + 1 && 
+                gameState.route[0] === gameState.route[gameState.route.length - 1]) {
+                validateBtn.disabled = false;
+            } else {
+                validateBtn.disabled = true;
+            }
+
+            // Update power-up buttons
+            document.getElementById('shortcut-btn').disabled = gameState.powerUps.shortcutUsed;
+            document.getElementById('boost-btn').disabled = !gameState.powerUps.boostAvailable;
+        }
+
+        function checkGameCompletion() {
+            if (gameState.route.length === gameData.cities.length + 1 && 
+                gameState.route[0] === gameState.route[gameState.route.length - 1]) {
+                // All cities visited and returned to start
+                document.getElementById('validate-btn').disabled = false;
+            }
+        }
+
+        function validateRoute() {
+            // Check if route is complete
+            if (gameState.route.length !== gameData.cities.length + 1 || 
+                gameState.route[0] !== gameState.route[gameState.route.length - 1]) {
+                alert("Please complete your route by visiting all cities and returning to the start!");
+                return;
+            }
+
+            // Calculate final score
+            const baseScore = 1000;
+            const timePenalty = gameState.totalTime;
+            const riskPenalty = gameState.totalRisk * 2;
+            const profitBonus = gameState.totalProfit;
+            
+            // Efficiency bonus for good routes
+            const averageTime = gameState.totalTime / gameState.route.length;
+            const efficiencyBonus = averageTime < 15 ? 200 : averageTime < 20 ? 100 : 0;
+            
+            const finalScore = Math.max(0, baseScore - timePenalty - riskPenalty + profitBonus + efficiencyBonus);
+
+            // Show results
+            showResults(finalScore, efficiencyBonus);
+        }
+
+        function showResults(finalScore, efficiencyBonus) {
+            document.getElementById('final-score').textContent = finalScore;
+            document.getElementById('result-time').textContent = `${gameState.totalTime} days`;
+            document.getElementById('result-risk').textContent = gameState.totalRisk;
+            document.getElementById('result-profit').textContent = `${gameState.totalProfit} gold`;
+            document.getElementById('result-bonus').textContent = efficiencyBonus;
+            
+            document.getElementById('results-modal').classList.remove('hidden');
+        }
+
+        function useRevealShortcut() {
+            if (gameState.powerUps.shortcutUsed) return;
+            
+            gameState.powerUps.shortcutRevealed = true;
+            gameState.powerUps.shortcutUsed = true;
+            
+            renderMap(); // Re-render to show shortcuts
+            updateStats();
+            
+            alert("Hidden shortcuts revealed! Look for the red dashed lines.");
+        }
+
+        function useCaravanBoost() {
+            if (!gameState.powerUps.boostAvailable) return;
+            
+            gameState.powerUps.boostUsed = true;
+            updateStats();
+            
+            alert("Caravan boost activated! Your next route segment will take 50% less time.");
+        }
+
+        function resetGame() {
+            // Reset game state
+            gameState = {
+                route: [],
+                visitedCities: new Set(),
+                currentCity: null,
+                totalTime: 0,
+                totalRisk: 0,
+                totalProfit: 0,
+                eventTriggered: false,
+                currentEvent: null,
+                powerUps: {
+                    shortcutRevealed: false,
+                    shortcutUsed: false,
+                    boostAvailable: true,
+                    boostUsed: false
+                }
+            };
+
+            // Hide modals
+            document.getElementById('results-modal').classList.add('hidden');
+            document.getElementById('event-modal').classList.add('hidden');
+
+            // Re-render
+            renderMap();
+            updateStats();
+        }
+
+        function showTutorial() {
+            document.getElementById('tutorial-modal').classList.remove('hidden');
+        }
+
+        function startGame() {
+            document.getElementById('tutorial-modal').classList.add('hidden');
+        }
+
+        function showCityTooltip(event, city) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `
+                <strong>${city.name}</strong><br>
+                Market Value: ${city.marketPrice} gold<br>
+                Hazard Level: ${city.hazardLevel}/10
+            `;
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+            tooltip.classList.remove('hidden');
+        }
+
+        function showEdgeTooltip(event, edge) {
+            const tooltip = document.getElementById('tooltip');
+            const fromCity = getCityById(edge.from);
+            const toCity = getCityById(edge.to);
+            
+            tooltip.innerHTML = `
+                <strong>${fromCity.name} → ${toCity.name}</strong><br>
+                Time: ${edge.timeCost} days<br>
+                Risk: ${edge.riskCost}<br>
+                ${edge.hidden ? '<em>Secret Route!</em>' : ''}
+            `;
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+            tooltip.classList.remove('hidden');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.add('hidden');
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', initializeGame);
+        window.addEventListener('resize', initializeGame);
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
