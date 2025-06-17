@@ -1,3 +1,3 @@
-<a href="game/game.html">Play Game</a>
-<a href="manual/manual.html">Manual</a>
-<a href="design/design.html">Design Thinking</a>
+<a href="game.html">Play Game</a>
+<a href="manual.html">Manual</a>
+<a href="design.html">Design Thinking</a>
