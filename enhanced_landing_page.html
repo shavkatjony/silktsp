@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silk Route Strategist - TSP Project Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(45deg, #8B4513 0%, #D2B48C 50%, #F4A460 100%);
+            background-size: 400% 400%;
+            animation: backgroundShift 20s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Home Button */
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 18px;
+            border-radius: 25px;
+            border: 2px solid #654321;
+            font-size: 1em;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .home-button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 18px rgba(139, 69, 19, 0.4);
+            background: linear-gradient(135deg, #A0522D 0%, #CD853F 100%);
+        }
+
+        .main-container {
+            background: linear-gradient(45deg, #F5DEB3 0%, #DEB887 100%);
+            border: 4px solid #8B4513;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(139, 69, 19, 0.4);
+            padding: 50px 40px;
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="%23DEB887" opacity="0.1"/><circle cx="80" cy="30" r="1" fill="%23DEB887" opacity="0.1"/><circle cx="40" cy="70" r="1" fill="%23DEB887" opacity="0.1"/><circle cx="90" cy="80" r="1" fill="%23DEB887" opacity="0.1"/></svg>');
+            pointer-events: none;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .project-title {
+            color: #8B4513;
+            font-size: 3em;
+            text-shadow: 3px 3px 6px rgba(139, 69, 19, 0.3);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .project-subtitle {
+            color: #A0522D;
+            font-size: 1.4em;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .team-info {
+            background: rgba(160, 82, 45, 0.15);
+            border: 2px solid #A0522D;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .team-info h3 {
+            color: #8B4513;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .team-members {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            color: #654321;
+            font-size: 1.1em;
+        }
+
+        .team-member {
+            background: rgba(245, 222, 179, 0.3);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #DEB887;
+        }
+
+        .description {
+            color: #654321;
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin: 30px 0;
+            background: rgba(245, 222, 179, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #DEB887;
+        }
+
+        .deliverables-section {
+            margin-top: 40px;
+        }
+
+        .deliverables-title {
+            color: #8B4513;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+        }
+
+        .buttons-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .deliverable-button {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
+            color: white;
+            text-decoration: none;
+            padding: 25px 20px;
+            border-radius: 15px;
+            border: 3px solid #654321;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(139, 69, 19, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .deliverable-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .deliverable-button:hover::before {
+            left: 100%;
+        }
+
+        .deliverable-button:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(139, 69, 19, 0.4);
+            background: linear-gradient(135deg, #A0522D 0%, #CD853F 50%, #DAA520 100%);
+        }
+
+        .button-icon {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .button-title {
+            font-size: 1.3em;
+            margin-bottom: 8px;
+        }
+
+        .button-description {
+            font-size: 0.9em;
+            opacity: 0.9;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        /* Additional Resources Section */
+        .additional-resources {
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 2px dashed #A0522D;
+        }
+
+        .additional-title {
+            color: #8B4513;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(139, 69, 19, 0.2);
+        }
+
+        .small-buttons-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .small-button {
+            background: linear-gradient(135deg, #CD853F 0%, #DAA520 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 12px;
+            border-radius: 10px;
+            border: 2px solid #B8860B;
+            font-size: 0.95em;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(205, 133, 63, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .small-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.4s;
+        }
+
+        .small-button:hover::before {
+            left: 100%;
+        }
+
+        .small-button:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 6px 18px rgba(205, 133, 63, 0.4);
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+        }
+
+        .small-button-icon {
+            font-size: 1.8em;
+            margin-bottom: 2px;
+        }
+
+        .small-button-title {
+            font-size: 1em;
+            margin-bottom: 4px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .small-button-subtitle {
+            font-size: 0.75em;
+            opacity: 0.85;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #A0522D;
+            color: #8B4513;
+            font-style: italic;
+            font-size: 1.1em;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .home-button {
+                top: 15px;
+                left: 15px;
+                padding: 10px 14px;
+                font-size: 0.9em;
+            }
+
+            .main-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .project-title {
+                font-size: 2.2em;
+            }
+
+            .project-subtitle {
+                font-size: 1.2em;
+            }
+
+            .team-members {
+                grid-template-columns: 1fr;
+            }
+
+            .buttons-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .deliverable-button {
+                padding: 20px 15px;
+                font-size: 1.1em;
+            }
+
+            .small-buttons-container {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .small-button {
+                padding: 12px 10px;
+                font-size: 0.9em;
+            }
+        }
+
+        /* Animation for page load */
+        .main-container {
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Home Button -->
+    <a href="#" class="home-button">
+        <span>🏠</span>
+        <span>Home</span>
+    </a>
+
+    <div class="main-container">
+        <div class="content">
+            <h1 class="project-title">🐪 Silk Route Strategist</h1>
+            <p class="project-subtitle">TSP Game Development Project</p>
+            
+            <div class="team-info">
+                <h3>👥 Development Team</h3>
+                <div class="team-members">
+                    <div class="team-member">
+                        <strong>[Your Name]</strong><br>
+                        Lead Developer & UI Designer
+                    </div>
+                    <div class="team-member">
+                        <strong>[Team Member 2]</strong><br>
+                        Game Mechanics & Testing
+                    </div>
+                    <div class="team-member">
+                        <strong>[Team Member 3]</strong><br>
+                        Research & Documentation
+                    </div>
+                    <div class="team-member">
+                        <strong>[Team Member 4]</strong><br>
+                        Visual Design & UX
+                    </div>
+                </div>
+            </div>
+
+            <div class="description">
+                <strong>Project Overview:</strong> A medieval trading simulation that transforms the abstract Traveling Salesman Problem into an engaging historical adventure. Players plan caravan routes along the ancient Silk Road, optimizing for time, risk, and profit while encountering random events and strategic challenges.
+            </div>
+
+            <div class="deliverables-section">
+                <h2 class="deliverables-title">📋 Project Deliverables</h2>
+                
+                <div class="buttons-container">
+                    <a href="game.html" class="deliverable-button">
+                        <div class="button-icon">🎮</div>
+                        <div class="button-title">Play the Game</div>
+                        <div class="button-description">Interactive TSP trading game with route planning, events, and scoring system</div>
+                    </a>
+
+                    <a href="game-manual.html" class="deliverable-button">
+                        <div class="button-icon">📖</div>
+                        <div class="button-title">Game Manual</div>
+                        <div class="button-description">Complete player guide with rules, strategies, and gameplay mechanics</div>
+                    </a>
+
+                    <a href="design-thinking.html" class="deliverable-button">
+                        <div class="button-icon">🎯</div>
+                        <div class="button-title">Design Process</div>
+                        <div class="button-description">Detailed design thinking documentation from empathy to testing</div>
+                    </a>
+                </div>
+
+                <!-- Additional Resources Section -->
+                <div class="additional-resources">
+                    <h3 class="additional-title">📚 Additional Resources</h3>
+                    
+                    <div class="small-buttons-container">
+                        <a href="#" class="small-button">
+                            <div class="small-button-icon">📄</div>
+                            <div class="small-button-title">Design Thinking File</div>
+                            <div class="small-button-subtitle">PDF Documentation</div>
+                        </a>
+
+                        <a href="#" class="small-button">
+                            <div class="small-button-icon">📋</div>
+                            <div class="small-button-title">Game Manual File</div>
+                            <div class="small-button-subtitle">Complete Guide PDF</div>
+                        </a>
+
+                        <a href="#" class="small-button">
+                            <div class="small-button-icon">🗽</div>
+                            <div class="small-button-title">Previous TSP Solver</div>
+                            <div class="small-button-subtitle">NEW YORK</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>🏺 Ancient wisdom meets modern optimization • Built with HTML5, CSS3 & JavaScript</p>
+                <p style="margin-top: 10px; font-size: 0.9em;">Ready for GitHub Pages deployment 🚀</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
